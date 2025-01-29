@@ -30,8 +30,10 @@ return {
         single_file_support = false,
         root_dir = function(fname)
           if (lspconfig.util.root_pattern("deno.json", "deno.jsonc")(fname) ~= nil) then
+            vim.print("not starting ts lsp")
             return nil
           end
+          vim.print("starting ts lsp")
           return lspconfig.util.root_pattern("package.json", "tsconfig.json", ".git")(fname)
         end,
       })
@@ -57,6 +59,11 @@ return {
       vim.keymap.set("n", "<leader>e", function()
         vim.diagnostic.open_float(nil, { focus = false })
       end, {})
+      vim.diagnostic.config({
+        float = {
+          source = "always",
+        },
+      })
     end,
   },
 }
