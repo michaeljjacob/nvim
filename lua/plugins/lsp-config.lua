@@ -14,6 +14,7 @@ return {
         "jsonls",
         "clangd",
         "denols",
+        "tailwindcss",
       },
     },
   },
@@ -41,6 +42,9 @@ return {
         capabilities = capabilities,
       })
       lspconfig.clangd.setup({
+        capabilities = capabilities,
+      })
+      lspconfig.tailwindcss.setup({
         capabilities = capabilities,
       })
       lspconfig.denols.setup({
