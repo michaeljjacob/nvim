@@ -16,3 +16,11 @@ vim.keymap.set("n", "<c-h>", ':wincmd h<CR>')
 vim.keymap.set("n", "<c-l>", ':wincmd l<CR>')
 
 vim.keymap.set("n", "<C-z>", '<Nop>', { silent = true })
+
+vim.filetype.add({
+  extension = {
+    drift = "sql",
+  },
+})
+
+vim.fn.setreg("l",  "yoconsole.log('pA:', pa);")

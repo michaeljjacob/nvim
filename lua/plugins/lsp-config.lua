@@ -14,48 +14,108 @@ return {
         "jsonls",
         "clangd",
         "denols",
-        "tailwindcss",
       },
     },
   },
   {
+    dependencies = {
+      "davidosomething/format-ts-errors.nvim",
+    },
     "neovim/nvim-lspconfig",
     config = function()
       local capabilities = require("cmp_nvim_lsp").default_capabilities()
-      local lspconfig = require("lspconfig")
-      lspconfig.lua_ls.setup({
+      
+      -- Custom diagnostic handler for TypeScript/Deno errors
+      local function custom_diagnostic_handler(err, result, ctx, config)
+        if result.diagnostics == nil then
+          return
+        end
+
+        -- ignore some tsserver diagnostics
+        local idx = 1
+        while idx <= #result.diagnostics do
+          local entry = result.diagnostics[idx]
+
+          local formatter = require("format-ts-errors")[entry.code]
+          entry.message = formatter and formatter(entry.message) or entry.message
+
+          -- codes: https://github.com/microsoft/TypeScript/blob/main/src/compiler/diagnosticMessages.json
+          if entry.code == 80001 then
+            -- { message = "File is a CommonJS module; it may be converted to an ES module.", }
+            table.remove(result.diagnostics, idx)
+          else
+            idx = idx + 1
+          end
+        end
+
+        -- Call the default handler with the modified diagnostics
+        vim.lsp.diagnostic.on_publish_diagnostics(err, result, ctx, config)
+      end
+      
+      -- Configure servers using the new vim.lsp.config API
+      vim.lsp.config('lua_ls', {
         capabilities = capabilities,
       })
-      lspconfig.ts_ls.setup({
+      
+      vim.lsp.config('ts_ls', {
         capabilities = capabilities,
-        single_file_support = false,
-        root_dir = function(fname)
-          if (lspconfig.util.root_pattern("deno.json", "deno.jsonc")(fname) ~= nil) then
+        handlers = {
+          ["textDocument/publishDiagnostics"] = custom_diagnostic_handler,
+        },
+        root_dir = function(bufnr, on_dir)
+          local util = require('lspconfig.util')
+          if util.root_pattern("deno.json", "deno.jsonc")(vim.api.nvim_buf_get_name(bufnr)) then
             vim.print("not starting ts lsp")
-            return nil
+            return
           end
           vim.print("starting ts lsp")
-          return lspconfig.util.root_pattern("package.json", "tsconfig.json", ".git")(fname)
+          local root = util.root_pattern("package.json", "tsconfig.json", ".git")(vim.api.nvim_buf_get_name(bufnr))
+          if root then
+            on_dir(root)
+          end
         end,
       })
-      lspconfig.jsonls.setup({
+      
+      vim.lsp.config('jsonls', {
         capabilities = capabilities,
       })
-      lspconfig.clangd.setup({
+      
+      vim.lsp.config('clangd', {
         capabilities = capabilities,
       })
-      lspconfig.tailwindcss.setup({
+      
+      vim.lsp.config('denols', {
         capabilities = capabilities,
-      })
-      lspconfig.denols.setup({
-        capabilities = capabilities,
-        init_options = {
-          lint = true,
-          unstable = true,
+        handlers = {
+          ["textDocument/publishDiagnostics"] = custom_diagnostic_handler,
         },
-        root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+        settings = {
+          deno = {
+            lint = true,
+            unstable = true,
+          }
+        },
+        root_dir = function(bufnr, on_dir)
+          local util = require('lspconfig.util')
+          -- Only start if deno.json/deno.jsonc is found
+          local root = util.root_pattern("deno.json", "deno.jsonc")(vim.api.nvim_buf_get_name(bufnr))
+          if root then
+            vim.print("starting deno lsp")
+            on_dir(root)
+          else
+            vim.print("not starting deno lsp - no deno.json/deno.jsonc found")
+          end
+        end,
       })
-
+      
+      -- Enable the configured servers
+      vim.lsp.enable('lua_ls')
+      vim.lsp.enable('ts_ls')
+      vim.lsp.enable('jsonls')
+      vim.lsp.enable('clangd')
+      vim.lsp.enable('denols')
+      
+      -- Custom keymaps
       vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
       vim.keymap.set("n", "gD", vim.lsp.buf.declaration, {})
       vim.keymap.set("n", "gd", vim.lsp.buf.definition, {})
@@ -63,6 +123,8 @@ return {
       vim.keymap.set("n", "<leader>e", function()
         vim.diagnostic.open_float(nil, { focus = false })
       end, {})
+      
+      -- Diagnostic configuration
       vim.diagnostic.config({
         float = {
           source = "always",

@@ -5,15 +5,32 @@ has_words_before = function()
 end
 
 return {
+  -- {
+  --   "github/copilot.vim",
+  --   config = function()
+  --     vim.keymap.set(
+  --       "i",
+  --       "<C-l>",
+  --       'copilot#Accept("<CR>")',
+  --       { silent = true, expr = true, replace_keycodes = false }
+  --     )
+  --   end,
+  -- },
   {
-    "github/copilot.vim",
+    "supermaven-inc/supermaven-nvim",
     config = function()
-        vim.keymap.set("i", "<C-l>", 'copilot#Accept("<CR>")', { silent = true, expr = true, replace_keycodes = false })
+      require("supermaven-nvim").setup({
+        keymaps = {
+          accept_suggestion = "<C-y>",
+          clear_suggestion = "<C-e>",
+        },
+      })
     end,
   },
-  {
-    "hash7th/cmp-nvim-lsp",
-  },
+  { "hrsh7th/cmp-nvim-lsp" },
+  { "tpope/vim-dadbod" },
+  { "kristijanhusak/vim-dadbod-completion" },
+  { "kristijanhusak/vim-dadbod-ui" },
   {
     "L3MON4D3/LuaSnip",
     dependencies = {
@@ -27,6 +44,13 @@ return {
       local cmp = require("cmp")
       local ls = require("luasnip")
       require("luasnip.loaders.from_vscode").lazy_load()
+
+      cmp.setup.filetype({ "sql" }, {
+        sources = {
+          { name = "vim-dadbod-completion" },
+          { name = "buffer" },
+        },
+      })
 
       cmp.setup({
         snippet = {
@@ -51,8 +75,8 @@ return {
               cmp.select_next_item()
             elseif ls.expand_or_jumpable() then
               ls.expand_or_jump()
-            --elseif has_words_before() then
-            --  cmp.complete()
+            elseif has_words_before() then
+              cmp.complete()
             else
               fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
             end
