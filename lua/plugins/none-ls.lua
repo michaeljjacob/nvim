@@ -27,7 +27,13 @@ return {
         sources = {
           -- existing formatters
           null_ls.builtins.formatting.stylua,
-          null_ls.builtins.formatting.prettier,
+          null_ls.builtins.formatting.prettier.with({
+            extra_args = { "--config-precedence", "prefer-file" },
+            cwd = function(params)
+              -- Look for monorepo root (e.g., where .git or package.json exists)
+              return require("lspconfig.util").root_pattern("package.json", ".git")(params.bufname)
+            end,
+          }),
           -- cSpell for diagnostics and code actions
           cspell.diagnostics.with({
             diagnostics_postprocess = function(diagnostic)
@@ -37,8 +43,16 @@ return {
           cspell.code_actions,
         },
 
-        -- keymap for manual formatting
+        -- keymaps for formatting
         vim.keymap.set("n", "<leader>gf", vim.lsp.buf.format, { desc = "Format buffer" }),
+        vim.keymap.set("v", "<leader>gf", function()
+          vim.lsp.buf.format({
+            range = {
+              ["start"] = vim.api.nvim_buf_get_mark(0, "<"),
+              ["end"] = vim.api.nvim_buf_get_mark(0, ">"),
+            }
+          })
+        end, { desc = "Format selection" }),
       })
     end,
   },

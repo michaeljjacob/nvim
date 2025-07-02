@@ -5,6 +5,7 @@ has_words_before = function()
 end
 
 return {
+  -- disbled because I'm using supermaven
   -- {
   --   "github/copilot.vim",
   --   config = function()
@@ -21,16 +22,14 @@ return {
     config = function()
       require("supermaven-nvim").setup({
         keymaps = {
-          accept_suggestion = "<C-y>",
+          accept_suggestion = "<C-k>",
           clear_suggestion = "<C-e>",
         },
       })
     end,
   },
   { "hrsh7th/cmp-nvim-lsp" },
-  { "tpope/vim-dadbod" },
-  { "kristijanhusak/vim-dadbod-completion" },
-  { "kristijanhusak/vim-dadbod-ui" },
+  { "hrsh7th/cmp-path" },
   {
     "L3MON4D3/LuaSnip",
     dependencies = {
@@ -44,13 +43,6 @@ return {
       local cmp = require("cmp")
       local ls = require("luasnip")
       require("luasnip.loaders.from_vscode").lazy_load()
-
-      cmp.setup.filetype({ "sql" }, {
-        sources = {
-          { name = "vim-dadbod-completion" },
-          { name = "buffer" },
-        },
-      })
 
       cmp.setup({
         snippet = {
@@ -75,14 +67,15 @@ return {
               cmp.select_next_item()
             elseif ls.expand_or_jumpable() then
               ls.expand_or_jump()
-            elseif has_words_before() then
-              cmp.complete()
+            --elseif has_words_before() then
+            --  cmp.complete()
             else
               fallback() -- The fallback function sends a already mapped key. In this case, it's probably `<Tab>`.
             end
           end, { "i", "s" }),
         }),
         sources = cmp.config.sources({
+          { name = "path" },
           { name = "nvim_lsp" },
           { name = "luasnip" },
         }, {
