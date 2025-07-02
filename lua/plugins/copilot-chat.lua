@@ -21,6 +21,9 @@ return {
         width = 0.3,     -- 50% of editor width
         height = 0.5,    -- 50% of editor height
       },
+      question_header = "  ",
+      answer_header = "  ",
+      error_header = "  ",
     },
     config = function(_, opts)
       -- Configure vertical splits to open on the right
