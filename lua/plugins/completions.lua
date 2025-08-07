@@ -44,6 +44,14 @@ return {
       local ls = require("luasnip")
       require("luasnip.loaders.from_vscode").lazy_load()
 
+      -- Enable completions for SQL files
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = {"sql", "mysql", "plsql"},
+        callback = function()
+          cmp.setup.buffer({ sources = {{name = "vim-dadbod-completion"}} })
+        end,
+      })
+
       cmp.setup({
         snippet = {
           -- REQUIRED - you must specify a snippet engine
@@ -78,6 +86,7 @@ return {
           { name = "path" },
           { name = "nvim_lsp" },
           { name = "luasnip" },
+          { name = "vim-dadbod-completion" },
         }, {
           { name = "buffer" },
         }),

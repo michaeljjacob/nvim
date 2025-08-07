@@ -14,6 +14,7 @@ return {
 				"jsonls",
 				"clangd",
 				"denols",
+				"eslint",
 			},
 		},
 	},
@@ -104,12 +105,17 @@ return {
 				end,
 			})
 
+			vim.lsp.config("eslint", {
+				capabilities = capabilities,
+			})
+
 			-- Enable the configured servers
 			vim.lsp.enable("lua_ls")
 			vim.lsp.enable("ts_ls")
 			vim.lsp.enable("jsonls")
 			vim.lsp.enable("clangd")
 			vim.lsp.enable("denols")
+			vim.lsp.enable("eslint")
 
 			-- Custom keymaps
 			vim.keymap.set("n", "K", vim.lsp.buf.hover, {})
